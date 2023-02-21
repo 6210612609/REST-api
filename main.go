@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -18,36 +20,47 @@ var (
 	problemController    controller.ProblemController    = controller.NewProblem(problemService)
 )
 
-
-func run_file(path string, filename string, language string) {
-	
-	fmt.Println("expect => C:/Users/npt/project/storage/")
-	fmt.Println("get => "+path)
-	fmt.Println("expect => hello.java")
-	fmt.Println("get => "+filename)
-	fmt.Println("expect => java")
-	fmt.Println("get => "+language)
-
-	if language == "java"{
+func run_file(path string, filename string, language string, input string) {
+	if language == "java" {
 		cmd0, err0 := exec.Command("javac", path+filename+".java").CombinedOutput()
-	if err0 != nil {
-		fmt.Println(err0)
-	}
-	fmt.Println(string(cmd0))
-
-	cmd1, err1 := exec.Command("java", "-cp", path, filename).CombinedOutput()
-	if err1 != nil {
-		fmt.Println(err1)
-	}
-	fmt.Println(string(cmd1))
-	}else if language == "py" {
-		cmd2, err2 := exec.Command("python3", path+filename+".py").CombinedOutput()
-		if err2 != nil {
-			fmt.Println(err2)
+		if err0 != nil {
+			fmt.Println(err0)
 		}
-		fmt.Println(string(cmd2))
-        
-    }else{
+		fmt.Println(string(cmd0))
+
+		cmd1, err1 := exec.Command("java", "-cp", path, filename, input).CombinedOutput()
+		if err1 != nil {
+			fmt.Println(err1)
+		}
+		fmt.Println(string(cmd1))
+
+	} else if language == "python" {
+	
+		cmd := exec.Command("python3", "C:/Users/npt/project/REST-api/test2.py")
+
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		// input
+		input := "hello "+"\n"+"world "+"\n"+"end "
+
+
+		go func() {
+			defer stdin.Close()
+			io.WriteString(stdin, input)
+		}()
+
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("----------------------------------------")
+		fmt.Printf("%s", out)
+		fmt.Println("----------------------------------------")
+
+	} else {
 		fmt.Println("file not found")
 	}
 
@@ -64,15 +77,17 @@ func main() {
 		ctx.JSON(200, assignmentController.Save(ctx))
 
 		file, _ := ctx.FormFile("source")
+		full_filename := strings.Split(file.Filename, ".")
+		filename := full_filename[0]
+		language := ctx.Request.FormValue("language")
+		input := ctx.Request.FormValue("input")
 
 		// Upload the file to specific dst.
 		storage_path := "C:/Users/npt/project/storage/"
 		dst := storage_path + file.Filename
 		ctx.SaveUploadedFile(file, dst)
 
-		filename := strings.Split(file.Filename, ".")
-
-		run_file(storage_path,filename[0],filename[1])
+		run_file(storage_path, filename, language, input)
 	})
 
 	server.GET("/problem", func(ctx *gin.Context) {
