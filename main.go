@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"log"
+	// "io"
+	// "log"
 	"net/http"
 	"os/exec"
 	"strings"
@@ -21,6 +21,9 @@ var (
 )
 
 func run_file(path string, filename string, language string, input string) {
+
+	// inputs := strings.Split(input, ",")
+
 	if language == "java" {
 		cmd0, err0 := exec.Command("javac", path+filename+".java").CombinedOutput()
 		if err0 != nil {
@@ -35,30 +38,49 @@ func run_file(path string, filename string, language string, input string) {
 		fmt.Println(string(cmd1))
 
 	} else if language == "python" {
-	
-		cmd := exec.Command("python3", "C:/Users/npt/project/REST-api/test2.py")
 
-		stdin, err := cmd.StdinPipe()
+		//args
+		prg := "python3"
+
+		arg1 := "C:/Users/npt/project/REST-api/test2.py"
+		arg2 := "2"
+		arg3 := "3"
+
+		cmd := exec.Command(prg, arg1, arg2, arg3)
+		stdout, err := cmd.Output()
+
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err.Error())
+			return
 		}
 
-		// input
-		input := "hello "+"\n"+"world "+"\n"+"end "
+		fmt.Print(string(stdout))
 
 
-		go func() {
-			defer stdin.Close()
-			io.WriteString(stdin, input)
-		}()
 
-		out, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println("----------------------------------------")
-		fmt.Printf("%s", out)
-		fmt.Println("----------------------------------------")
+		//keyboard input
+
+		// cmd := exec.Command("python3", "C:/Users/npt/project/REST-api/test2.py")
+		// stdin, err := cmd.StdinPipe()
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+
+		// // input
+		// input := "hello "+"\n"+"world "+"\n"+"end "
+
+		// go func() {
+		// 	defer stdin.Close()
+		// 	io.WriteString(stdin, input)
+		// }()
+
+		// out, err := cmd.CombinedOutput()
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// fmt.Println("----------------------------------------")
+		// fmt.Printf("%s", out)
+		// fmt.Println("----------------------------------------")
 
 	} else {
 		fmt.Println("file not found")
